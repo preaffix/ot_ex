@@ -12,17 +12,17 @@ defmodule OT.JSON.Transformation do
   See `OT.Text.Transformation.transform/3` for a more complete explanation of
   operation transformation.
   """
-  @spec transform(Operation.t, Operation.t, OT.Type.side) :: Operation.t
+  @spec transform(Operation.t(), Operation.t(), OT.Type.side()) :: Operation.t()
   def transform(op_a, op_b, side) do
     op_a
-    |> Enum.reduce([], fn (comp_a, new_op) ->
+    |> Enum.reduce([], fn comp_a, new_op ->
       comp_a = Enum.reduce(op_b, comp_a, &do_transform(&2, &1, side))
       [comp_a | new_op]
     end)
-    |> Enum.reverse
+    |> Enum.reverse()
   end
 
-  @spec do_transform(Component.t, Component.t, OT.Type.side) :: Component.t
+  @spec do_transform(Component.t(), Component.t(), OT.Type.side()) :: Component.t()
   defp do_transform(comp_a, _comp_b, _side) do
     comp_a
   end

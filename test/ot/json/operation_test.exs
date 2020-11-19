@@ -12,7 +12,7 @@ defmodule OT.JSON.OperationTest do
 
     test "inverts the op", %{op: op} do
       assert Operation.invert(op) ==
-        [%{p: [1], ld: 2}, %{p: [0], li: 3}]
+               [%{p: [1], ld: 2}, %{p: [0], li: 3}]
     end
 
     test "results in proper document state", %{op: op} do

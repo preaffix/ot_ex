@@ -8,7 +8,7 @@ defmodule OT.JSON.Operation do
   @typedoc """
   An operation, which is a list of `t:OT.JSON.Component.t/0`s
   """
-  @type t :: [Component.t]
+  @type t :: [Component.t()]
 
   @doc """
   Append a component to an operation.
@@ -18,7 +18,7 @@ defmodule OT.JSON.Operation do
       iex> OT.JSON.Operation.append([%{p: [0], na: 1}], %{p: [0], na: 1})
       [%{p: [0], na: 2}]
   """
-  @spec append(t, Component.t) :: t
+  @spec append(t, Component.t()) :: t
   def append([], comp), do: comp
 
   def append(op, comp) do
@@ -39,6 +39,6 @@ defmodule OT.JSON.Operation do
   """
   @spec invert(t) :: t
   def invert(op) do
-    Enum.reduce(op, [], &([Component.invert(&1) | &2]))
+    Enum.reduce(op, [], &[Component.invert(&1) | &2])
   end
 end

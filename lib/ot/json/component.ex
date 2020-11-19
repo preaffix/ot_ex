@@ -20,7 +20,7 @@ defmodule OT.JSON.Component do
   alias Text.Operation, as: TextOperation
 
   @typedoc "A key pointing to a location in an object"
-  @type key :: String.t
+  @type key :: String.t()
 
   @typedoc "A number pointing to an index in a list"
   @type index :: non_neg_integer
@@ -31,37 +31,37 @@ defmodule OT.JSON.Component do
   @typedoc """
   A list replace component, in which a value is replaced in a list
   """
-  @type list_replace :: %{p: path, ld: JSON.datum, li: JSON.datum}
+  @type list_replace :: %{p: path, ld: JSON.datum(), li: JSON.datum()}
 
   @typedoc """
   A list delete component, in which a value is deleted from a list
   """
-  @type list_delete :: %{p: path, ld: JSON.datum}
+  @type list_delete :: %{p: path, ld: JSON.datum()}
 
   @typedoc """
   A list insert component, in which a value is inserted into a list
   """
-  @type list_insert :: %{p: path, li: JSON.datum}
+  @type list_insert :: %{p: path, li: JSON.datum()}
 
   @typedoc """
   A list move component, in which a value moved within a list
   """
-  @type list_move :: %{p: path, lm: JSON.datum}
+  @type list_move :: %{p: path, lm: JSON.datum()}
 
   @typedoc """
   An object replace component, in which a value is replaced in an object
   """
-  @type object_replace :: %{p: path, od: JSON.datum, oi: JSON.datum}
+  @type object_replace :: %{p: path, od: JSON.datum(), oi: JSON.datum()}
 
   @typedoc """
   An object delete component, in which a value is deleted from an object
   """
-  @type object_delete :: %{p: path, od: JSON.datum}
+  @type object_delete :: %{p: path, od: JSON.datum()}
 
   @typedoc """
   An object insert component, in which a value is inserted into an object
   """
-  @type object_insert :: %{p: path, oi: JSON.datum}
+  @type object_insert :: %{p: path, oi: JSON.datum()}
 
   @typedoc """
   A numeric add component, in which a value is added to
@@ -71,21 +71,35 @@ defmodule OT.JSON.Component do
   @typedoc """
   A subtype component, in which a subtype operation is performed
   """
-  @type subtype :: %{p: path, t: String.t, o: list}
+  @type subtype :: %{p: path, t: String.t(), o: list}
 
   @typedoc """
   An atom declaring the type of a component
   """
-  @type type :: :list_replace | :list_delete | :list_insert | :list_move
-              | :object_replace | :object_delete | :object_insert | :numeric_add
-              | :subtype
+  @type type ::
+          :list_replace
+          | :list_delete
+          | :list_insert
+          | :list_move
+          | :object_replace
+          | :object_delete
+          | :object_insert
+          | :numeric_add
+          | :subtype
 
   @typedoc """
   A single unit of work performed on a JSON datum.
   """
-  @type t :: list_replace | list_delete | list_insert | list_move
-             | object_replace | object_delete | object_insert | numeric_add
-             | subtype
+  @type t ::
+          list_replace
+          | list_delete
+          | list_insert
+          | list_move
+          | object_replace
+          | object_delete
+          | object_insert
+          | numeric_add
+          | subtype
 
   @doc """
   Invert a single component.
@@ -98,20 +112,28 @@ defmodule OT.JSON.Component do
   @spec invert(t) :: t
   def invert(%{p: p, ld: ld, li: li}),
     do: %{p: p, ld: li, li: ld}
+
   def invert(%{p: p, ld: ld}),
     do: %{p: p, li: ld}
+
   def invert(%{p: p, li: li}),
     do: %{p: p, ld: li}
+
   def invert(%{p: p, lm: lm}),
     do: %{p: Enum.slice(p, 0..-2) ++ [lm], lm: List.last(p)}
+
   def invert(%{p: p, od: od, oi: oi}),
     do: %{p: p, od: oi, oi: od}
+
   def invert(%{p: p, od: od}),
     do: %{p: p, oi: od}
+
   def invert(%{p: p, oi: oi}),
     do: %{p: p, od: oi}
+
   def invert(%{p: p, na: na}),
     do: %{p: p, na: na * -1}
+
   def invert(%{p: p, t: "text", o: o}),
     do: %{p: p, t: "text", o: TextOperation.invert(o)}
 
@@ -119,7 +141,7 @@ defmodule OT.JSON.Component do
   Join two components into an operation, possibly combining them into a single
   component.
   """
-  @spec join(t, t) :: Operation.t
+  @spec join(t, t) :: Operation.t()
 
   # text/text
   def join(%{p: p, t: "text", o: o_a}, %{p: p, t: "text", o: o_b}),

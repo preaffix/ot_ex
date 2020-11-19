@@ -10,7 +10,7 @@ defmodule OT.JSON do
   @behaviour OT.Type
 
   @typedoc "A map that this OT type can operate on"
-  @type json_map :: %{optional(String.t) => value}
+  @type json_map :: %{optional(String.t()) => value}
 
   @typedoc "A list that this OT type can operate on"
   @type json_list :: [value]
@@ -19,7 +19,7 @@ defmodule OT.JSON do
   @type datum :: json_map | json_list
 
   @typedoc "A value of a JSON list or map"
-  @type value :: datum | String.t | number | nil
+  @type value :: datum | String.t() | number | nil
 
   @doc """
   Initialize a blank JSON datum (defaults to map).

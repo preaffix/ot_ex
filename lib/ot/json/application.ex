@@ -10,14 +10,15 @@ defmodule OT.JSON.Application do
   The result of an `apply/2` function call, representing either success or error
   in applying an operation.
   """
-  @type apply_result :: {:ok, OT.JSON.datum}
-                      | Text.Application.apply_result
+  @type apply_result ::
+          {:ok, OT.JSON.datum()}
+          | Text.Application.apply_result()
 
   @typedoc "An argument to the implicit function call of a component"
-  @type argument :: {JSON.value, JSON.value} | JSON.value | Component.index
+  @type argument :: {JSON.value(), JSON.value()} | JSON.value() | Component.index()
 
-  @typep component_function
-         :: ((JSON.datum, Component.path, argument) -> JSON.datum)
+  @typep component_function ::
+           (JSON.datum(), Component.path(), argument -> JSON.datum())
 
   @doc """
   Apply an operation to a JSON datum.
@@ -72,7 +73,7 @@ defmodule OT.JSON.Application do
       iex> OT.JSON.Application.apply([0, 1, 2], [%{p: [0], ld: "x"}])
       {:error, :delete_mismatch}
   """
-  @spec apply(JSON.datum, Operation.t) :: apply_result
+  @spec apply(JSON.datum(), Operation.t()) :: apply_result
   def apply(json, op) do
     case Enum.reduce(op, json, &do_apply/2) do
       err = {:error, _} -> err
@@ -80,7 +81,7 @@ defmodule OT.JSON.Application do
     end
   end
 
-  @spec apply!(JSON.datum, Operation.t) :: JSON.datum | no_return
+  @spec apply!(JSON.datum(), Operation.t()) :: JSON.datum() | no_return
   def apply!(json, op) do
     with {:ok, result} <- __MODULE__.apply(json, op) do
       result
@@ -89,7 +90,7 @@ defmodule OT.JSON.Application do
     end
   end
 
-  @spec do_apply(Component.t, JSON.datum) :: JSON.datum | no_return
+  @spec do_apply(Component.t(), JSON.datum()) :: JSON.datum() | no_return
   defp do_apply(%{p: path, ld: del_object, li: ins_object}, json) do
     apply_in(json, path, {del_object, ins_object}, &list_replace/3)
   catch
@@ -104,6 +105,7 @@ defmodule OT.JSON.Application do
 
   defp do_apply(%{p: path, li: ins_object}, json),
     do: apply_in(json, path, ins_object, &list_insert/3)
+
   defp do_apply(%{p: path, lm: index}, json),
     do: apply_in(json, path, index, &list_move/3)
 
@@ -121,6 +123,7 @@ defmodule OT.JSON.Application do
 
   defp do_apply(%{p: path, oi: ins_object}, json),
     do: apply_in(json, path, ins_object, &object_insert/3)
+
   defp do_apply(%{p: path, na: number}, json),
     do: apply_in(json, path, number, &numeric_add/3)
 
@@ -130,8 +133,8 @@ defmodule OT.JSON.Application do
     err = {:error, _} -> err
   end
 
-  @spec apply_in(JSON.datum, Component.path, argument, component_function)
-                 :: JSON.datum | no_return
+  @spec apply_in(JSON.datum(), Component.path(), argument, component_function) ::
+          JSON.datum() | no_return
   defp apply_in(json, [path_segment], arg, func),
     do: func.(json, path_segment, arg)
 
@@ -141,14 +144,14 @@ defmodule OT.JSON.Application do
     end)
   end
 
-  @spec apply_subtype(JSON.datum, Component.key | Component.index,
-                      {String.t, list}) :: JSON.datum
+  @spec apply_subtype(JSON.datum(), Component.key() | Component.index(), {String.t(), list}) ::
+          JSON.datum()
   defp apply_subtype(value, index, {"text", op}) when is_list(value) do
     old_string = Enum.at(value, index)
 
     case Text.apply(old_string, op) do
       {:ok, new_string} -> list_replace(value, index, {old_string, new_string})
-      err = {:error, _} -> throw err
+      err = {:error, _} -> throw(err)
     end
   end
 
@@ -157,36 +160,36 @@ defmodule OT.JSON.Application do
 
     case Text.apply(old_string, op) do
       {:ok, new_string} -> object_replace(value, key, {old_string, new_string})
-      err = {:error, _} -> throw err
+      err = {:error, _} -> throw(err)
     end
   end
 
-  @spec list_replace(JSON.json_list, Component.index, {JSON.value, JSON.value})
-        :: JSON.json_list
+  @spec list_replace(JSON.json_list(), Component.index(), {JSON.value(), JSON.value()}) ::
+          JSON.json_list()
   defp list_replace(list, index, {del, ins}) do
     list
     |> list_delete(index, del)
     |> list_insert(index, ins)
   end
 
-  @spec list_delete(JSON.json_list, Component.index, JSON.value)
-        :: JSON.json_list
+  @spec list_delete(JSON.json_list(), Component.index(), JSON.value()) ::
+          JSON.json_list()
   defp list_delete(list, index, value) do
     if Enum.at(list, index) == value do
       List.delete_at(list, index)
     else
-      throw {:error, :delete_mismatch}
+      throw({:error, :delete_mismatch})
     end
   end
 
-  @spec list_insert(JSON.json_list, Component.index, JSON.value)
-        :: JSON.json_list
+  @spec list_insert(JSON.json_list(), Component.index(), JSON.value()) ::
+          JSON.json_list()
   defp list_insert(list, index, value) do
     List.insert_at(list, index, value)
   end
 
-  @spec list_move(JSON.json_list, Component.index, Component.index)
-        :: JSON.json_list
+  @spec list_move(JSON.json_list(), Component.index(), Component.index()) ::
+          JSON.json_list()
   defp list_move(list, old_index, new_index) do
     value = Enum.at(list, old_index)
 
@@ -195,30 +198,30 @@ defmodule OT.JSON.Application do
     |> List.insert_at(new_index, value)
   end
 
-  @spec object_replace(JSON.json_map, Component.key, {JSON.value, JSON.value})
-        :: JSON.json_map
+  @spec object_replace(JSON.json_map(), Component.key(), {JSON.value(), JSON.value()}) ::
+          JSON.json_map()
   defp object_replace(map, key, {del, ins}) do
     map
     |> object_delete(key, del)
     |> object_insert(key, ins)
   end
 
-  @spec object_delete(JSON.json_map, Component.key, JSON.value) :: JSON.json_map
+  @spec object_delete(JSON.json_map(), Component.key(), JSON.value()) :: JSON.json_map()
   defp object_delete(map, key, value) do
     if Map.get(map, key) == value do
       Map.delete(map, key)
     else
-      throw {:error, :delete_mismatch}
+      throw({:error, :delete_mismatch})
     end
   end
 
-  @spec object_insert(JSON.json_map, Component.key, JSON.value) :: JSON.json_map
+  @spec object_insert(JSON.json_map(), Component.key(), JSON.value()) :: JSON.json_map()
   defp object_insert(map, key, value) do
     Map.put(map, key, value)
   end
 
-  @spec numeric_add(JSON.datum, Component.index | Component.key, number)
-        :: JSON.datum
+  @spec numeric_add(JSON.datum(), Component.index() | Component.key(), number) ::
+          JSON.datum()
   defp numeric_add(value, index, increment) when is_list(value) do
     old_value = Enum.at(value, index)
     new_value = old_value + increment
@@ -231,17 +234,19 @@ defmodule OT.JSON.Application do
     object_replace(value, key, {old_value, new_value})
   end
 
-  @spec build_path_keys(Component.path, JSON.datum) :: [(... -> any) | String.t]
+  @spec build_path_keys(Component.path(), JSON.datum()) :: [(... -> any) | String.t()]
   defp build_path_keys(path, json) do
     path
     |> Enum.reduce({json, []}, &do_build_path_keys/2)
     |> elem(1)
-    |> Enum.reverse
+    |> Enum.reverse()
   end
 
-  @spec do_build_path_keys(Component.key | Component.index,
-                           {JSON.datum, Component.path})
-        :: {JSON.datum, [(... -> any)| String.t]}
+  @spec do_build_path_keys(
+          Component.key() | Component.index(),
+          {JSON.datum(), Component.path()}
+        ) ::
+          {JSON.datum(), [(... -> any) | String.t()]}
   defp do_build_path_keys(key, {json, keys}) when is_list(json) do
     {Enum.at(json, key), [Access.at(key) | keys]}
   end
